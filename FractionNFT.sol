@@ -4,9 +4,14 @@ pragma solidity ^0.8.4;
 
 import "./VTOKEN.sol";
 
-interface ERCNft{
-     function transferFrom721(  address from, address to, uint256 tokenId )  external;
-     function transferFrom1155(  address from, address to, uint256 id,uint256 amount,bytes memory data)  external;
+interface Erc721 {
+   function approve(address to, uint256 tokenId) external;
+   function transferFrom(  address from, address to, uint256 tokenId ) external;
+}
+
+interface Erc1155 {
+  function setApprovalForAll(address operator, bool approved) external;
+   function safeTransferFrom ( address from, address to, uint256 id,  uint256 amount,  bytes memory data) external;
 }
 
 
@@ -14,26 +19,40 @@ contract FractionNFT  {
 
     mapping(address =>address) nftVTokenMap721;
     mapping(address =>mapping(uint256 =>address)) nftVTokenMap1155;
-    mapping (address=>mapping (address=>uint256))  nftAmount721;
-    mapping (address=> mapping (address=>mapping(uint256 =>uint256))) nftAmount1155;
 
-    function exchange721(address nftAddress,uint256 tokenId )public payable{
+
+    // mapping (address=>mapping (address=>uint256))  nftAmount721;
+    // mapping (address=> mapping (address=>mapping(uint256 =>uint256))) nftAmount1155;
+
+
+    function getVtokenAddress721(address nftAddress)public view returns(address) {
+        return nftVTokenMap721[nftAddress];
+    }
+
+    function getVtokenAddress1155(address nftAddress,uint256 id)public view returns(address) {
+        return nftVTokenMap1155[nftAddress][id];
+    }
+
+
+    function exchange721(address nftAddress,uint256 tokenId )public returns(address){
         if(!isExistAddress(nftAddress)){
             nftVTokenMap721[nftAddress]= address(new  VTOKEN("VTOKEN","VTOKEN"));
         }
         VTOKEN(nftVTokenMap721[nftAddress]).mint(msg.sender, 1);
-        ERCNft(nftAddress).transferFrom721(msg.sender, address(this), tokenId);
-        nftAmount721[nftAddress][msg.sender]=tokenId;
+        Erc721(nftAddress).approve(address(this), tokenId);
+        Erc721(nftAddress).transferFrom(msg.sender, address(this), tokenId);
+        return nftVTokenMap721[nftAddress];
     }
 
 
-    function exchange1155(address nftAddress,uint256 id, uint256 amount)public payable{
+    function exchange1155(address nftAddress,uint256 id, uint256 amount)public  returns(address){
         if(!isExistAddress(nftAddress)){
             nftVTokenMap1155[nftAddress][id]= address(new  VTOKEN("VTOKEN","VTOKEN"));
         }
         VTOKEN(nftVTokenMap1155[nftAddress][id]).mint(msg.sender, amount);
-        ERCNft(nftAddress).transferFrom1155(msg.sender, address(this), id,amount,'0x');
-        nftAmount1155[nftAddress][msg.sender][id]=nftAmount1155[nftAddress][msg.sender][id]+amount;
+        Erc1155(nftAddress).setApprovalForAll(address(this), true);
+        Erc1155(nftAddress).safeTransferFrom(msg.sender, address(this), id,amount,'0x');
+        return nftVTokenMap1155[nftAddress][id];
     }
 
     function isExistAddress(address nftAddress) public view returns(bool){
