@@ -2,7 +2,7 @@
 pragma solidity ^0.8.4;
 
 
-import "./VTOKEN.sol";
+import "./VToken.sol";
 
 interface Erc721 {
    function approve(address to, uint256 tokenId) external;
@@ -14,15 +14,9 @@ interface Erc1155 {
    function safeTransferFrom ( address from, address to, uint256 id,  uint256 amount,  bytes memory data) external;
 }
 
-
 contract FractionNFT  {
-
     mapping(address =>address) nftVTokenMap721;
     mapping(address =>mapping(uint256 =>address)) nftVTokenMap1155;
-
-
-    // mapping (address=>mapping (address=>uint256))  nftAmount721;
-    // mapping (address=> mapping (address=>mapping(uint256 =>uint256))) nftAmount1155;
 
 
     function getVtokenAddress721(address nftAddress)public view returns(address) {
@@ -33,6 +27,17 @@ contract FractionNFT  {
         return nftVTokenMap1155[nftAddress][id];
     }
 
+    function create(address nftAddress,uint  id ) public returns(address) {
+        if(id >0 ){
+            require(nftVTokenMap721[nftAddress] != address(0));
+            nftVTokenMap721[nftAddress]= address(new  VTOKEN("VTOKEN","VTOKEN"));
+            return nftVTokenMap721[nftAddress];  
+        }else{
+            require(nftVTokenMap1155[nftAddress][id] != address(0));
+            nftVTokenMap1155[nftAddress][id]= address(new  VTOKEN("VTOKEN","VTOKEN"));
+            return nftVTokenMap1155[nftAddress][id];  
+        }
+    }
 
     function exchange721(address nftAddress,uint256 tokenId )public returns(address){
         if(!isExistAddress(nftAddress)){
@@ -46,9 +51,6 @@ contract FractionNFT  {
 
 
     function exchange1155(address nftAddress,uint256 id, uint256 amount)public  returns(address){
-        if(!isExistAddress(nftAddress)){
-            nftVTokenMap1155[nftAddress][id]= address(new  VTOKEN("VTOKEN","VTOKEN"));
-        }
         VTOKEN(nftVTokenMap1155[nftAddress][id]).mint(msg.sender, amount);
         Erc1155(nftAddress).setApprovalForAll(address(this), true);
         Erc1155(nftAddress).safeTransferFrom(msg.sender, address(this), id,amount,'0x');
@@ -58,7 +60,5 @@ contract FractionNFT  {
     function isExistAddress(address nftAddress) public view returns(bool){
         return nftVTokenMap721[nftAddress] != address(0);
     }
-
-
 
 }

@@ -37,23 +37,19 @@ contract SwapPool {
     scale = _scale;
   }
 
-  function swapToB(uint  _amountA) public payable{
-      require(WETHERC20Lp(tokenA).balanceOf(msg.sender) > _amountA,"Token is insufficient tokenA ");
-     // WETHERC20Lp(tokenA).approve(address(this), _amountA);
-      WETHERC20Lp(tokenA).transferFrom(msg.sender,address(this),_amountA);
-      uint amountB= _amountA*scale/unit;
-      transferFormB(msg.sender,amountB);
-
+  function swap( address toAddress,uint  _amount) public payable{
+        if(tokenA == toAddress ){
+                require(WETHERC20Lp(tokenB).balanceOf(msg.sender) > _amount,"Token is insufficient tokenB ");
+                WETHERC20Lp(tokenB).transferFrom(msg.sender,address(this),_amount);
+                WETHERC20Lp(tokenA).transferFrom(address(this),msg.sender,getToken(toAddress,_amount));
+        }else{
+            require(WETHERC20Lp(tokenA).balanceOf(msg.sender) > _amount,"Token is insufficient tokenA ");
+            WETHERC20Lp(tokenA).transferFrom(msg.sender,address(this),_amount);
+            WETHERC20Lp(tokenB).transferFrom(address(this),msg.sender,getToken(toAddress,_amount));
+        }
   }
 
-  function swapToA(uint  _amountB) public payable{
-      require(WETHERC20Lp(tokenB).balanceOf(msg.sender) > _amountB,"Token is insufficient tokenA ");
-      //WETHERC20Lp(tokenB).approve(address(this), _amountB);
-      WETHERC20Lp(tokenB).transferFrom(msg.sender,address(this),_amountB);
-      uint amountA= _amountB*unit/scale;
-      transferFormA(msg.sender,amountA);
-      syncWorthA();
-  }
+ 
 
 
    function syncWorthA() private {
@@ -66,21 +62,28 @@ contract SwapPool {
   }
 
 
-  function stake(uint _amountA,uint _amountB) public payable{
+  function stake(uint _amountA,uint _amountB) public {
     require(WETHERC20Lp(tokenA).balanceOf(msg.sender) > _amountA,"Token is insufficient tokenA ");
     require(WETHERC20Lp(tokenB).balanceOf(msg.sender) > _amountB,"Token is insufficient tokenB ");
-    require(getTokenB(_amountA) == _amountB ,"amont is insufficient tokenB ");
+    require(getToken(tokenB,_amountA) == _amountB ,"amont is insufficient tokenB ");
     WETHERC20Lp(tokenA).transferFrom(msg.sender,address(this),_amountA);
     WETHERC20Lp(tokenB).transferFrom(msg.sender,address(this),_amountB);
     uint lpTokenA = _amountA*unit/worthA;
     totalLpTokenA+=lpTokenA;
     balancesLpTokenA[msg.sender]+=lpTokenA;
-    emit stakekEvent(msg.sender, msg.value,_amountB,lpTokenA);
+    emit stakekEvent(msg.sender, _amountA,_amountB,lpTokenA);
   }
 
-  function getTokenB(uint amountA)public view returns(uint){
-     return  amountA*scale/unit;
+
+
+  function getToken(address toAddress,uint amount)public view returns(uint){
+      if(tokenB == toAddress){
+          return  amount*scale/unit;
+      }else{
+           return  amount*unit/scale;
+      }
   }
+
 
 
   function unStake(uint lpAmountA) public payable {
