@@ -67,8 +67,8 @@ contract UniswapV3Router {
 
 
 
-   function getToken(address pools,address toAddress, uint amountA)public view returns(uint){
-        return  SwapPool(pools).getToken(toAddress,amountA);
+   function getTokenOut(address pools,address toAddress, uint amountFrom)public view returns(uint){
+        return  SwapPool(pools).getToken(toAddress,amountFrom);
     }
 
 
