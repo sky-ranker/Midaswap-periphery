@@ -8,7 +8,7 @@ contract UniswapV3Router {
     mapping(address => mapping(address=> mapping(address=>address))) private  getPool721;
         //nft-> tokenA->tokenB id pools
     mapping(address => mapping(address=> mapping(address=> mapping(uint256=>address)))) private   getPool1155;
-    
+
     address private fractionNFTAddress;
 
     PoolInfo[]  private poolInfoArray;
@@ -39,7 +39,7 @@ contract UniswapV3Router {
         }else{
             return  poolMap721[nft_address][tokenB];
         }
-    
+
     }
 
 
@@ -84,7 +84,7 @@ contract UniswapV3Router {
                     pools= address(new  SwapPool(vtokenAddress,tokenB,address(this),scale));
                     getPool1155[nft_address][vtokenAddress][tokenB][id]=pools;
                    PoolInfo memory poolInfo= PoolInfo(pools,nft_address,id,vtokenAddress,tokenB,fractionNFTAddress);
-                    poolInfoArray.push(poolInfo);   
+                    poolInfoArray.push(poolInfo);
                     poolMap1155[nft_address][tokenB][id]= poolInfo;
                 }
           }else{
@@ -94,17 +94,17 @@ contract UniswapV3Router {
                     pools= address(new  SwapPool(vtokenAddress,tokenB,address(this),scale));
                     getPool721[nft_address][vtokenAddress][tokenB]=pools;
                     PoolInfo memory poolInfo= PoolInfo(pools,nft_address,0,vtokenAddress,tokenB,fractionNFTAddress);
-                    poolInfoArray.push(poolInfo);   
+                    poolInfoArray.push(poolInfo);
                     poolMap721[nft_address][tokenB]= poolInfo;
                 }
 
           }
     }
-    
+
 
 
     function addPool721(address nft_address,address tokenB ,uint256 tokenId,uint _amountA,uint _amountB) public {
-        address vtokenAddress = FractionNFT(fractionNFTAddress).exchange721(nft_address,tokenId);
+        address vtokenAddress = FractionNFT(fractionNFTAddress).exchange721(msg.sender,nft_address,tokenId);
         address pools=  getPool721[nft_address][vtokenAddress][tokenB];
         SwapPool(pools).stake(_amountA, _amountB);
 
