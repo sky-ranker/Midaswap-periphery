@@ -27,9 +27,9 @@ contract UniswapV3Router {
         address fractionNFTAddress;
     }
 
-    constructor ()  {
-         fractionNFTAddress= address(new  FractionNFT());
-         createPool(0xC20D9e5c96A263d62B2Edc8C99592A8C68776916,0,0x56223BAe67e6B26E6d1FC8B10431536235eD5B18,80 ether);
+    constructor (address nftAddress, address tokenB)  {
+        fractionNFTAddress= address(new  FractionNFT());
+        createPool(nftAddress, 0, tokenB, 80 ether);
     }
 
 
