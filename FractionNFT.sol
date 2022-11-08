@@ -29,13 +29,13 @@ contract FractionNFT  {
 
     function create(address nftAddress,uint  id ) public returns(address) {
         if(id >0 ){
-            require(nftVTokenMap721[nftAddress] != address(0));
-            nftVTokenMap721[nftAddress]= address(new  VTOKEN("VTOKEN","VTOKEN"));
-            return nftVTokenMap721[nftAddress];  
-        }else{
-            require(nftVTokenMap1155[nftAddress][id] != address(0));
+             require(nftVTokenMap1155[nftAddress][id] == address(0));
             nftVTokenMap1155[nftAddress][id]= address(new  VTOKEN("VTOKEN","VTOKEN"));
             return nftVTokenMap1155[nftAddress][id];  
+        }else{
+            require(nftVTokenMap721[nftAddress] == address(0));
+            nftVTokenMap721[nftAddress]= address(new  VTOKEN("VTOKEN","VTOKEN"));
+            return nftVTokenMap721[nftAddress];  
         }
     }
 
