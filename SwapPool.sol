@@ -3,7 +3,6 @@ pragma solidity >=0.8.0;
 
 interface WETHERC20Lp{
   function balanceOf(address _account) external view returns (uint256);
-  function transfer(address to, uint256 amount) external  returns (bool);
   function transferFrom( address from,address to, uint256 amount) external   returns (bool);
    function approve(address spender, uint256 amount) external returns (bool);
 
@@ -37,21 +36,19 @@ contract SwapPool {
     scale = _scale;
   }
 
-  function swap( address toAddress,uint  _amount) public payable{
+  function swap(address sender ,address toAddress,uint  _amount) public payable{
         if(tokenA == toAddress ){
-                require(WETHERC20Lp(tokenB).balanceOf(msg.sender) > _amount,"Token is insufficient tokenB ");
-                WETHERC20Lp(tokenB).transferFrom(msg.sender,address(this),_amount);
-                WETHERC20Lp(tokenA).transferFrom(address(this),msg.sender,getToken(toAddress,_amount));
+                require(WETHERC20Lp(tokenB).balanceOf(sender) > _amount,"Token is insufficient tokenB ");
+                WETHERC20Lp(tokenB).transferFrom(sender,address(this),_amount);
+                WETHERC20Lp(tokenA).transferFrom(address(this),sender,getToken(toAddress,_amount));
         }else{
-            require(WETHERC20Lp(tokenA).balanceOf(msg.sender) > _amount,"Token is insufficient tokenA ");
-            WETHERC20Lp(tokenA).transferFrom(msg.sender,address(this),_amount);
-            WETHERC20Lp(tokenB).transferFrom(address(this),msg.sender,getToken(toAddress,_amount));
+            require(WETHERC20Lp(tokenA).balanceOf(sender) > _amount,"Token is insufficient tokenA ");
+            WETHERC20Lp(tokenA).transferFrom(sender,address(this),_amount);
+            WETHERC20Lp(tokenB).transferFrom(address(this),sender,getToken(toAddress,_amount));
         }
   }
 
  
-
-
    function syncWorthA() private {
      uint balanceAmountA = WETHERC20Lp(tokenA).balanceOf(address(this));
     if(balanceAmountA > 0){
@@ -62,16 +59,16 @@ contract SwapPool {
   }
 
 
-  function stake(uint _amountA,uint _amountB) public {
-    require(WETHERC20Lp(tokenA).balanceOf(msg.sender) > _amountA,"Token is insufficient tokenA ");
-    require(WETHERC20Lp(tokenB).balanceOf(msg.sender) > _amountB,"Token is insufficient tokenB ");
+  function stake(address sender,uint _amountA,uint _amountB) public {
+    require(WETHERC20Lp(tokenA).balanceOf(sender) > _amountA,"Token is insufficient tokenA ");
+    require(WETHERC20Lp(tokenB).balanceOf(sender) > _amountB,"Token is insufficient tokenB ");
     require(getToken(tokenB,_amountA) == _amountB ,"amont is insufficient tokenB ");
-    WETHERC20Lp(tokenA).transferFrom(msg.sender,address(this),_amountA);
-    WETHERC20Lp(tokenB).transferFrom(msg.sender,address(this),_amountB);
+    WETHERC20Lp(tokenA).transferFrom(sender,address(this),_amountA);
+    WETHERC20Lp(tokenB).transferFrom(sender,address(this),_amountB);
     uint lpTokenA = _amountA*unit/worthA;
     totalLpTokenA+=lpTokenA;
-    balancesLpTokenA[msg.sender]+=lpTokenA;
-    emit stakekEvent(msg.sender, _amountA,_amountB,lpTokenA);
+    balancesLpTokenA[sender]+=lpTokenA;
+    emit stakekEvent(sender, _amountA,_amountB,lpTokenA);
   }
 
 
@@ -85,34 +82,17 @@ contract SwapPool {
   }
 
 
-
-  function unStake(uint lpAmountA) public payable {
+  function unStake(address sender,uint lpAmountA) public payable {
     require( lpAmountA > 0,"Incorrect amount");
-    require(balancesLpTokenA[msg.sender] >= lpAmountA,"Incorrect lpAmount");
+    require(balancesLpTokenA[sender] >= lpAmountA,"Incorrect lpAmount");
     uint amountA= lpAmountA*worthA/unit;
     uint balanceAmountB = WETHERC20Lp(tokenB).balanceOf(address(this));
     uint amountB= (balanceAmountB*unit/totalLpTokenA)*lpAmountA/unit;
     totalLpTokenA -= lpAmountA;
-    balancesLpTokenA[msg.sender]-=lpAmountA;
-    transferFormA(msg.sender,amountA);
-    transferFormB(msg.sender,amountB);
-    emit unStakeEvent(msg.sender,lpAmountA,amountA);
-  }
-
-
-  function transferFormA(address to,uint amount) isAdmin public payable {
-    uint total = WETHERC20Lp(tokenA).balanceOf(address(this));
-    if(total > retainAmount){
-      WETHERC20Lp(tokenA).transfer(to,amount);
-      syncWorthA();
-      emit transferFormEvent(msg.sender,to,amount);
-    }
-  }
-
-
-   function transferFormB(address to,uint amount) isAdmin public payable {
-     WETHERC20Lp(tokenB).transfer(to,amount);
-     emit transferFormEvent(msg.sender,to,amount);
+    balancesLpTokenA[sender]-=lpAmountA;
+    WETHERC20Lp(tokenA).transferFrom(address(this),sender,amountA);
+    WETHERC20Lp(tokenB).transferFrom(address(this),sender,amountB);
+    emit unStakeEvent(sender,lpAmountA,amountA);
   }
 
 
