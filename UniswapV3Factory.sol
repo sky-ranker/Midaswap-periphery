@@ -15,7 +15,9 @@ contract UniswapV3Router {
     mapping(address => mapping(address=>PoolInfo)) private  poolMap721;
     mapping(address => mapping(address=> mapping(uint=>PoolInfo))) private  poolMap1155;
 
+    mapping(address =>PoolInfo[]) private myAddPoolArr;
 
+    mapping(address => mapping(address=> uint)) private myAddPoolMap;
 
 
     struct PoolInfo{
@@ -70,8 +72,12 @@ contract UniswapV3Router {
     }
 
 
-    function getLpToken(address pools)public view returns(uint, uint){
-        return  SwapPool(pools).getLpToken(msg.sender);
+    function getLpToken(address pools, address owner)public view returns(uint, uint){
+        return  SwapPool(pools).getLpToken(owner);
+    }
+
+    function getMyAddPoolArr(address owner)public view returns(PoolInfo[] memory){
+        return  myAddPoolArr[owner];
     }
 
 
@@ -110,6 +116,7 @@ contract UniswapV3Router {
         address vtokenAddress = FractionNFT(fractionNFTAddress).exchange721(msg.sender,nft_address,tokenId);
         address pools=  getPool721[nft_address][vtokenAddress][tokenB];
         SwapPool(pools).stake(msg.sender,_amountA, _amountB);
+        addMyAddPoolMap(msg.sender, pools, nft_address, tokenB);
     }
 
 
@@ -131,6 +138,14 @@ contract UniswapV3Router {
         address tokenA = FractionNFT(fractionNFTAddress).getVtokenAddress1155(nft_address,id);
         address pools=  getPool1155[nft_address][tokenA][tokenB][id];
         SwapPool(pools).unStake(msg.sender,lpAmount);
+    }
+
+    function addMyAddPoolMap(address owner, address poolsAddress, address nft_address,address tokenB) private {
+        if(myAddPoolMap[owner][poolsAddress] == 0){
+            myAddPoolMap[owner][poolsAddress] = 1;
+            PoolInfo memory poolInfo= PoolInfo(poolsAddress,nft_address,0,tokenB,tokenB,tokenB);
+            myAddPoolArr[owner].push(poolInfo);
+        }
     }
 
 
