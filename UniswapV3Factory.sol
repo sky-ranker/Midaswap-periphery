@@ -6,7 +6,7 @@ import "./FractionNFT.sol";
 contract UniswapV3Router {
     //nft-> tokenA->tokenB pools address
     mapping(address => mapping(address=> mapping(address=>address))) private  getPool721;
-        //nft-> tokenA->tokenB id pools
+    //nft-> tokenA->tokenB id pools
     mapping(address => mapping(address=> mapping(address=> mapping(uint256=>address)))) private   getPool1155;
 
     address private fractionNFTAddress;
@@ -48,55 +48,60 @@ contract UniswapV3Router {
 
     function getPoolAddress(address nft_address,address tokenB,uint  id ) public  view  returns(address) {
         if(id > 0){
-             address vtokenAddress = FractionNFT(fractionNFTAddress).getVtokenAddress1155(nft_address,id);
-             return    getPool1155[nft_address][vtokenAddress][tokenB][id];
+            address vtokenAddress = FractionNFT(fractionNFTAddress).getVtokenAddress1155(nft_address,id);
+            return    getPool1155[nft_address][vtokenAddress][tokenB][id];
         }else{
-          address vtokenAddress = FractionNFT(fractionNFTAddress).getVtokenAddress721(nft_address);
-          return   getPool721[nft_address][vtokenAddress][tokenB];
+            address vtokenAddress = FractionNFT(fractionNFTAddress).getVtokenAddress721(nft_address);
+            return   getPool721[nft_address][vtokenAddress][tokenB];
         }
     }
 
     function getVtoken(address nft_address,uint  id) public  view  returns(address) {
-         if(id > 0){
-             return  FractionNFT(fractionNFTAddress).getVtokenAddress1155(nft_address,id);
-         }else{
-               return  FractionNFT(fractionNFTAddress).getVtokenAddress721(nft_address);
-         }
+        if(id > 0){
+            return  FractionNFT(fractionNFTAddress).getVtokenAddress1155(nft_address,id);
+        }else{
+            return  FractionNFT(fractionNFTAddress).getVtokenAddress721(nft_address);
+        }
     }
 
 
-   function getTokenOut(address pools,address toAddress, uint amountFrom)public view returns(uint){
+    function getTokenOut(address pools,address toAddress, uint amountFrom)public view returns(uint){
         return  SwapPool(pools).getToken(toAddress,amountFrom);
     }
 
 
+    function getLpToken(address pools)public view returns(uint, uint){
+        return  SwapPool(pools).getLpToken(msg.sender);
+    }
+
+
     function swap(address pools,address toAddress ,uint _amount) public {
-          SwapPool(pools).swap(msg.sender,toAddress,_amount);
+        SwapPool(pools).swap(msg.sender,toAddress,_amount);
     }
 
     function createPool(address nft_address,uint  id ,address tokenB ,uint scale) public {
-          if(id > 0){
-                address  vtokenAddress = FractionNFT(fractionNFTAddress).create(nft_address,id);
-                address pools = getPool1155[nft_address][vtokenAddress][tokenB][id];
-                if(pools == address(0)){
-                    pools= address(new  SwapPool(vtokenAddress,tokenB,address(this),scale));
-                    getPool1155[nft_address][vtokenAddress][tokenB][id]=pools;
-                   PoolInfo memory poolInfo= PoolInfo(pools,nft_address,id,vtokenAddress,tokenB,fractionNFTAddress);
-                    poolInfoArray.push(poolInfo);
-                    poolMap1155[nft_address][tokenB][id]= poolInfo;
-                }
-          }else{
-                address  vtokenAddress =  FractionNFT(fractionNFTAddress).create(nft_address,id);
-                address pools = getPool721[nft_address][vtokenAddress][tokenB];
-                 if(pools == address(0)){
-                    pools= address(new  SwapPool(vtokenAddress,tokenB,address(this),scale));
-                    getPool721[nft_address][vtokenAddress][tokenB]=pools;
-                    PoolInfo memory poolInfo= PoolInfo(pools,nft_address,0,vtokenAddress,tokenB,fractionNFTAddress);
-                    poolInfoArray.push(poolInfo);
-                    poolMap721[nft_address][tokenB]= poolInfo;
-                }
+        if(id > 0){
+            address  vtokenAddress = FractionNFT(fractionNFTAddress).create(nft_address,id);
+            address pools = getPool1155[nft_address][vtokenAddress][tokenB][id];
+            if(pools == address(0)){
+                pools= address(new  SwapPool(vtokenAddress,tokenB,address(this),scale));
+                getPool1155[nft_address][vtokenAddress][tokenB][id]=pools;
+                PoolInfo memory poolInfo= PoolInfo(pools,nft_address,id,vtokenAddress,tokenB,fractionNFTAddress);
+                poolInfoArray.push(poolInfo);
+                poolMap1155[nft_address][tokenB][id]= poolInfo;
+            }
+        }else{
+            address  vtokenAddress =  FractionNFT(fractionNFTAddress).create(nft_address,id);
+            address pools = getPool721[nft_address][vtokenAddress][tokenB];
+            if(pools == address(0)){
+                pools= address(new  SwapPool(vtokenAddress,tokenB,address(this),scale));
+                getPool721[nft_address][vtokenAddress][tokenB]=pools;
+                PoolInfo memory poolInfo= PoolInfo(pools,nft_address,0,vtokenAddress,tokenB,fractionNFTAddress);
+                poolInfoArray.push(poolInfo);
+                poolMap721[nft_address][tokenB]= poolInfo;
+            }
 
-          }
+        }
     }
 
 
@@ -115,7 +120,7 @@ contract UniswapV3Router {
     }
 
 
-     function unStake721(address nft_address,address tokenB ,uint lpAmount) public {
+    function unStake721(address nft_address,address tokenB ,uint lpAmount) public {
         address vtokenAddress = FractionNFT(fractionNFTAddress).getVtokenAddress721(nft_address);
         address pools=  getPool721[nft_address][vtokenAddress][tokenB];
         SwapPool(pools).unStake(msg.sender,lpAmount);

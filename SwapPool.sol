@@ -105,10 +105,10 @@ contract SwapPool {
         return owner;
     }
 
-    function  getLpToken() view public  returns(uint,uint){
+    function  getLpToken(address _owner) view public  returns(uint,uint){
         uint balanceAmountB = WETHERC20Lp(tokenB).balanceOf(address(this));
-        uint amountA =  balancesLpTokenA[msg.sender]*unit/worthA;
-        uint amountB= (balanceAmountB*unit/totalLpTokenA)*balancesLpTokenA[msg.sender]/unit;
+        uint amountA =  balancesLpTokenA[_owner]*unit/worthA;
+        uint amountB= (balanceAmountB*unit/totalLpTokenA)*balancesLpTokenA[_owner]/unit;
         return (amountA,amountB);
     }
 
@@ -117,6 +117,4 @@ contract SwapPool {
     }
 
 }
-
-
 
