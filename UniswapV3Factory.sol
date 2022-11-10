@@ -80,6 +80,10 @@ contract UniswapV3Router {
         return  myAddPoolArr[owner];
     }
 
+    function getFractionNFTAddress()public view returns(address){
+        return fractionNFTAddress;
+    }
+
 
     function swap(address pools,address toAddress ,uint _amount) public {
         SwapPool(pools).swap(msg.sender,toAddress,_amount);
