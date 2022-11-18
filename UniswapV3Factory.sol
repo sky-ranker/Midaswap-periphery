@@ -7,7 +7,7 @@ import "./FractionNFT.sol";
  this contract is create  pool  and  swap  addpool
  */
 
-contract MadiSwapV3Router {
+contract MidaSwapV3Router {
     //nft-> tokenA->tokenB pools address
     mapping(address => mapping(address=> mapping(address=>address))) private  getPool721;
     //nft-> tokenA->tokenB id pools
